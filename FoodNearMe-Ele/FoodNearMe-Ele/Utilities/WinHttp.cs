@@ -2,11 +2,13 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Text;
 
 namespace NewElmeAPI
 {
 
-    public class HttpRequests
+    public class WinHttp
     {
         private ComObject HttpObj;
         private string contentType;
@@ -14,9 +16,9 @@ namespace NewElmeAPI
         private bool active;
         private ArrayList PostDataList;//提交的数据字段 
         private bool isutf8;
-        public HttpRequests()
+        public WinHttp()
         {
-            //构建Http对象  
+            //构建WinHttp对象  
             HttpObj = new ComObject("WinHttp.WinHttpRequest.5.1");
             contentType = "application/x-www-form-urlencoded";
             contentLength = 0;
@@ -32,7 +34,7 @@ namespace NewElmeAPI
         /// <returns></returns>
         public static string HttpPost(string url, string postData, Dictionary<string, string> dictHead)
         {
-            HttpRequests winHttp = new HttpRequests();
+            WinHttp winHttp = new WinHttp();
             winHttp.ContentType = "Content-Type: application/json";
             winHttp.Open("POST", url, false);
 
@@ -49,6 +51,33 @@ namespace NewElmeAPI
             return utf8_gb2312(winHttp.ResponseBody);
         }
 
+
+        public static string OAuthHeader(string apiKey, string nonce, string timeStamp, string sig, string accessToken, )
+        {
+            //构造OAuth头部 
+            StringBuilder oauthHeader = new StringBuilder();
+            oauthHeader.AppendFormat("OAuth realm=\"\", oauth_consumer_key={0}, ", apiKey);
+            oauthHeader.AppendFormat("oauth_nonce={0}, ", nonce);
+            oauthHeader.AppendFormat("oauth_timestamp={0}, ", timeStamp);
+            oauthHeader.AppendFormat("oauth_signature_method={0}, ", "HMAC-SHA1");
+            oauthHeader.AppendFormat("oauth_version={0}, ", "1.0");
+            oauthHeader.AppendFormat("oauth_signature={0}, ", sig);
+            oauthHeader.AppendFormat("oauth_token={0}", accessToken);
+
+            //构造请求 
+            StringBuilder requestBody = new StringBuilder("");
+            Encoding encoding = Encoding.GetEncoding("utf-8");
+            byte[] data = encoding.GetBytes(requestBody.ToString());
+
+            // Http Request的设置 
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(uri);
+            request.Headers.Set("Authorization", oauthHeader.ToString());
+            //request.Headers.Add("Authorization", authorization); 
+            request.ContentType = "application/atom+xml";
+            request.Method = "GET";
+            return request;
+        }
+
         /// <summary>
         /// UTF8转换成GB2312
         /// </summary>
@@ -57,14 +86,14 @@ namespace NewElmeAPI
         public static string utf8_gb2312(string text)
         {
             //声明字符集   
-            System.Text.Encoding utf8, gb2312;
+            Encoding utf8, gb2312;
             //utf8   
-            utf8 = System.Text.Encoding.GetEncoding("utf-8");
+            utf8 = Encoding.GetEncoding("utf-8");
             //gb2312   
-            gb2312 = System.Text.Encoding.GetEncoding("gb2312");
+            gb2312 = Encoding.GetEncoding("gb2312");
             byte[] utf;
             utf = utf8.GetBytes(text);
-            utf = System.Text.Encoding.Convert(utf8, gb2312, utf);
+            utf = Encoding.Convert(utf8, gb2312, utf);
             //返回转换后的字符   
             return gb2312.GetString(utf);
         }
