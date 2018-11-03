@@ -1,11 +1,12 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web.Http;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Connector;
 
-namespace FoodNearMe_Ele
+namespace ThePriceBot
 {
     [BotAuthentication]
     public class MessagesController : ApiController
@@ -18,11 +19,34 @@ namespace FoodNearMe_Ele
         {
             if (activity.Type == ActivityTypes.Message)
             {
-                await Conversation.SendAsync(activity, () => new Dialogs.RootDialog());
+                if (string.Equals(activity.Text, "help", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    //var connector = new ConnectorClient(new Uri(activity.ServiceUrl));
+                    //foreach (var helpLine in Common.Messages.HelpLines)
+                    //{
+                    //    var reply = activity.CreateReply(helpLine);
+                    //    await connector.Conversations.ReplyToActivityAsync(reply);
+                    //}
+
+                    await Conversation.SendAsync(activity, () => new Dialogs.HelpDialog());
+                } 
+                else if (string.Equals(activity.Text, "hero", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    await Conversation.SendAsync(activity, () => new Dialogs.HeroCardDialog());
+                }
+                else
+                {
+                    await Conversation.SendAsync(activity, () => new Dialogs.RootDialog());
+                }
             }
             else
             {
                 HandleSystemMessage(activity);
+                // temp code for test purpose
+                //if (!string.IsNullOrEmpty(activity.Name))
+                //{
+                //    await Conversation.SendAsync(activity, () => new Dialogs.HelpDialog());
+                //}
             }
             var response = Request.CreateResponse(HttpStatusCode.OK);
             return response;
@@ -37,6 +61,7 @@ namespace FoodNearMe_Ele
             }
             else if (message.Type == ActivityTypes.ConversationUpdate)
             {
+                message.Name = "Chris";
                 // Handle conversation state changes, like members being added and removed
                 // Use Activity.MembersAdded and Activity.MembersRemoved and Activity.Action for info
                 // Not available in all channels
