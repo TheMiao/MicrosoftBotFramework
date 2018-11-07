@@ -1,9 +1,13 @@
 ﻿using Microsoft.Bot.Builder.Dialogs;
+using Microsoft.Owin.Security;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
+using Microsoft.Owin.Security.Cookies;
+using Microsoft.Owin.Security.OpenIdConnect;
+using System.Security.Claims;
 using System.Web;
+using System.Threading.Tasks;
 
 namespace ThePriceBot.Dialogs
 {
@@ -23,6 +27,11 @@ namespace ThePriceBot.Dialogs
         public async Task MessageReceivedAsync(IDialogContext context)
         {
             await context.PostAsync("This is Office 365 Dialog");
+        }
+
+        public async Task RequestUserLogin(IDialogContext context)
+        {
+            Request.GetOwinContext().Authentication.Challenge( new AuthenticationProperties { RedirectUri = "/" }, OpenIdConnectAuthenticationDefaults.AuthenticationType);
         }
 
         protected override Task ShowOption(IDialogContext context)
